@@ -1,9 +1,9 @@
-package com.example.ocrtograph.demos.service.impl;
+package com.example.ocrtograph.demos.web.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.ocrtograph.demos.service.GraphNodeService;
+import com.example.ocrtograph.demos.web.service.GraphNodeService;
 
-import com.example.ocrtograph.demos.mapper.GraphNodeMapper;
+import com.example.ocrtograph.demos.web.mapper.GraphNodeMapper;
 import com.example.ocrtograph.demos.web.bean.GraphNode;
 import org.springframework.stereotype.Service;
 

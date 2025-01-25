@@ -5,10 +5,19 @@ import com.alibaba.dashscope.app.ApplicationParam;
 import com.alibaba.dashscope.app.ApplicationResult;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.ocrtograph.demos.web.bean.GraphNode;
+import com.example.ocrtograph.demos.web.bean.Relation;
+import com.example.ocrtograph.demos.web.service.GraphNodeService;
+import com.example.ocrtograph.demos.web.service.RelationService;
+import com.example.ocrtograph.demos.web.service.impl.GraphNodeServiceImpl;
+import com.example.ocrtograph.demos.web.service.impl.RelationServiceImpl;
 import com.tencent.tcvectordb.model.AIDatabase;
 import com.tencent.tcvectordb.model.CollectionView;
+import com.tencent.tcvectordb.model.param.dml.GeneralParams;
 import com.tencent.tcvectordb.model.param.dml.SearchByContentsParam;
 import com.tencent.tcvectordb.model.param.entity.SearchContentInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 import java.io.BufferedReader;
@@ -25,6 +34,11 @@ public class txtToGraphUtil {
 
     private static final ApplicationParam applicationParam = ApplicationParam.builder().appId("676f862f89c74e69b520a51e24108267").apiKey("sk-87c476dd5822400990fc97a3d706d55a").build();
 
+
+    private static GraphNodeService graphNodeService = new GraphNodeServiceImpl();
+
+
+    private static RelationService relationService = new RelationServiceImpl();
     //多线程处理
     public static void txtToGraph (String txtPath, String graphPath) throws NoApiKeyException, InputRequiredException {
         // 读取txt文件 按照句号划分句子存到一个线程安全的集合中
@@ -70,7 +84,10 @@ public class txtToGraphUtil {
         List<String> documents = new ArrayList<>();
         for (int i = 1; i < 90; i++) {
             documents.add("output_part_"+ i +".pdf");
-        } String question ="从远古到现代,伴随人类的生存繁衍,医学探索疾病发生和发展规律,研究疾病预防和诊疗对策。在远方祭昧时代,先民在与自然灾害、猛兽、疾病的斗争中开始了医疗保健活动,逐步发现了一些可以沧疗疾病的药物和疗法,在生与死中不断积累经验,逐步形成了原始的经验型医学知识。我国古代文献4市王世纪》记载了伏羲氏“造书契以代结绳之政,画八卦以通神明之德,以类万物之情,所以六气六脂六脏,五行阴阳,四时水火升降得以有象,百病之理,得以有类…...乃尝昧百药而制九针,以拯天枉焕。司马迁的《史记》和朱熹的《纲鉴》记载了神农氏“尝百草,始有医药“。《通鉴外纪》记载了黄希所创之医,乃上穷下际,察五色,立五运,洞性命,纪阴阳,咨于岐伯而作《内经》。“战国至秦汉时期,历代许多医家广泛收集整理当时积累的医疗经验和思想,不断丰富增补汇集而成《黄帝内经》,这是我国古代经验型医学理论的代表文献";
+        }
+
+        String question ="从远古到现代,伴随人类的生存繁衍,医学探索疾病发生和发展规律,研究疾病预防和诊疗对策。在远方祭昧时代,先民在与自然灾害、猛兽、疾病的斗争中开始了医疗保健活动,逐步发现了一些可以沧疗疾病的药物和疗法,在生与死中不断积累经验,逐步形成了原始的经验型医学知识。我国古代文献4市王世纪》记载了伏羲氏“造书契以代结绳之政,画八卦以通神明之德,以类万物之情,所以六气六脂六脏,五行阴阳,四时水火升降得以有象,百病之理,得以有类…...乃尝昧百药而制九针,以拯天枉焕。司马迁的《史记》和朱熹的《纲鉴》记载了神农氏“尝百草,始有医药“。《通鉴外纪》记载了黄希所创之医,乃上穷下际,察五色,立五运,洞性命,纪阴阳,咨于岐伯而作《内经》。“战国至秦汉时期,历代许多医家广泛收集整理当时积累的医疗经验和思想,不断丰富增补汇集而成《黄帝内经》,这是我国古代经验型医学理论的代表文献";
+
         SearchByContentsParam searchByContentsParam = SearchByContentsParam.newBuilder()
                 .withContent(question)
                 .withDocumentSetName("output_part_1.pdf")
@@ -116,13 +133,45 @@ public class txtToGraphUtil {
                 System.out.println("label: " + label);
                 System.out.println("from: " + from);
                 System.out.println("to: " + to);
+                //存入数据库中：先查找是否有相同的点，如果有则不生成新的点，如果有相同的边则不生成新的边
+                //查询from和to是否在node表中
+                LambdaQueryWrapper<GraphNode> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(GraphNode::getLabel, from);
+                GraphNode one = graphNodeService.getOne(queryWrapper);
+                GraphNode graphNode = null;
+                if (one == null) {
+                    //生成新的点
+                    graphNode = new GraphNode();
+                    graphNode.setLabel(from);
+                    graphNodeService.save(graphNode);
+                }
+                LambdaQueryWrapper<GraphNode> queryWrapper2 = new LambdaQueryWrapper<>();
+                queryWrapper.eq(GraphNode::getLabel, to);
+                GraphNode one2 = graphNodeService.getOne(queryWrapper2);
+                GraphNode graphNode2 = null;
+                if (one2 == null) {
+                    //生成新的点
+                     graphNode2 = new GraphNode();
+                    graphNode2.setLabel(to);
+                    graphNodeService.save(graphNode2);
+                }
+                //查询from和to是否在relation表中
+                LambdaQueryWrapper<Relation> queryWrapper3 = new LambdaQueryWrapper<>();
+                queryWrapper3.eq(Relation::getFrom, graphNode==null?one.getId():graphNode.getId());
+                queryWrapper3.eq(Relation::getTo,  graphNode2==null?one2.getId():graphNode2.getId());
+                Relation one3 = relationService.getOne(queryWrapper3);
+                if (one3 == null) {
+                    //生成新的边
+                    Relation relation = new Relation();
+                    relation.setLabel(label);
+                    relation.setFrom(graphNode==null?one.getId():graphNode.getId());
+                    relation.setTo(graphNode2==null?one2.getId():graphNode2.getId());
+                    relationService.save(relation);
+                }
             } else {
                 System.out.println("没有找到匹配项");
             }
         }
-        //先读取点和边的csv文件，查看是否有重复的点和边，如果两个点都有则不生成新的点，如果两个点之间有边则不生成新的边
-        // 追加点csv文件
-        // 追加边csv文件
     }
 
 

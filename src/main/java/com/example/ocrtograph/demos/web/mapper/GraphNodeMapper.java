@@ -1,4 +1,4 @@
-package com.example.ocrtograph.demos.mapper;
+package com.example.ocrtograph.demos.web.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.ocrtograph.demos.web.bean.GraphNode;

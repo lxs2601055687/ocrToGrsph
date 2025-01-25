@@ -2,14 +2,17 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.ocrtograph.demos.web.mapper.GraphNodeMapper">
+<mapper namespace="com.example.ocrtograph.demos.web.mapper.RelationMapper">
 
-    <resultMap id="BaseResultMap" type="com.example.ocrtograph.demos.web.bean.GraphNode">
+    <resultMap id="BaseResultMap" type="com.example.ocrtograph.demos.web.bean.Relation">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="label" column="label" jdbcType="VARCHAR"/>
+            <result property="from" column="from" jdbcType="INTEGER"/>
+            <result property="to" column="to" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,label
+        id,label,from,
+        to
     </sql>
 </mapper>

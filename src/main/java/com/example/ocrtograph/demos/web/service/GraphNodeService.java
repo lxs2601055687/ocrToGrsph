@@ -1,4 +1,4 @@
-package com.example.ocrtograph.demos.service;
+package com.example.ocrtograph.demos.web.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.ocrtograph.demos.web.bean.GraphNode;
